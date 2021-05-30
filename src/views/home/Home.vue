@@ -4,59 +4,8 @@
     <home-swiper :banners="banners" />
     <recommend-view :recommends="recommends" />
     <feature />
-    <tab-control :titles="['流行', '新款', '精选']" />
-    <ul>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-    </ul>
+    <tab-control :titles="['流行', '新款', '精选']" @tabClick="tabClick" />
+    <good-list :goods="showGoods" />
   </div>
 </template>
 <script>
@@ -66,8 +15,9 @@ import Feature from './childComps/Feature.vue'
 
 import NavBar from 'components/common/navbar/NavBar'
 
-import { getHomeMultidata } from 'network/home'
-import TabControl from '../../components/content/tabControl/TabControl.vue'
+import { getHomeMultidata, getHomeGoods } from 'network/home'
+import TabControl from 'components/content/tabControl/TabControl.vue'
+import GoodList from 'components/content/goods/GoodList.vue'
 
 export default {
   name: 'Home',
@@ -77,20 +27,67 @@ export default {
     RecommendView,
     Feature,
     TabControl,
+    GoodList,
   },
   data() {
     return {
       banners: [],
       recommends: [],
+      goods: {
+        pop: { page: 1, list: [] },
+        new: { page: 1, list: [] },
+        sell: { page: 1, list: [] },
+      },
+      currentType: 'pop',
     }
+  },
+  computed: {
+    showGoods() {
+      return this.goods[this.currentType].list
+    },
   },
   created() {
     //请求多个数据
-    getHomeMultidata().then((res) => {
-      // console.log(res)
-      this.banners = res.data.banner.list
-      this.recommends = res.data.recommend.list
-    })
+    this.getHomeMultidata()
+    //请求商品数据
+    this.getHomeGoods('pop')
+    this.getHomeGoods('new')
+    this.getHomeGoods('sell')
+  },
+  methods: {
+    /**
+     * 事件监听
+     */
+    tabClick(index) {
+      switch (index) {
+        case 0:
+          this.currentType = 'pop'
+          break
+        case 1:
+          this.currentType = 'new'
+          break
+        case 2:
+          this.currentType = 'sell'
+          break
+      }
+    },
+    /**
+     *网络请求
+     */
+    getHomeMultidata() {
+      getHomeMultidata().then((res) => {
+        // console.log(res)
+        this.banners = res.data.banner.list
+        this.recommends = res.data.recommend.list
+      })
+    },
+    getHomeGoods(type) {
+      const page = this.goods[type].page
+      getHomeGoods(type, page).then((res) => {
+        this.goods[type].list.push(...res.data.list)
+        this.goods[type].page += 1
+      })
+    },
   },
 }
 </script>
@@ -112,5 +109,6 @@ export default {
 .tab-control {
   position: sticky;
   top: 44px;
+  z-index: 9;
 }
 </style>
