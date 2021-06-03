@@ -1,7 +1,12 @@
 <template>
   <div id="detail">
-    <detail-nav-bar @titleclick="titleclick" />
-    <scroll class="content" ref="scroll">
+    <detail-nav-bar @titleclick="titleclick" ref="nav" />
+    <scroll
+      class="content"
+      ref="scroll"
+      :probe-type="3"
+      @scrollTop="contentScroll"
+    >
       <detail-swiper :topImages="topImages" />
       <detail-base-info :goods="goods" />
       <detail-shop-info :shop="shop" />
@@ -10,6 +15,8 @@
       <detail-comment-info ref="comment" :commentInfo="commentInfo" />
       <good-list ref="recommend" :goods="recommends" />
     </scroll>
+    <detail-bottom-bar @addToCart="addToCart" />
+    <back-top v-show="isShowBackTop" @click.native="backTop" />
   </div>
 </template>
 
@@ -32,6 +39,8 @@ import DetailCommentInfo from './chilsComps/DetailCommentInfo.vue'
 import GoodList from '../../components/content/goods/GoodList.vue'
 import { itemListenerMixin } from 'common/mixin.js'
 import { debounce } from 'common/utils'
+import DetailBottomBar from './chilsComps/DetailBottomBar.vue'
+import BackTop from '../../components/content/backTop/BackTop.vue'
 
 export default {
   name: 'Detail',
@@ -45,6 +54,8 @@ export default {
     DetailParamInfo,
     DetailCommentInfo,
     GoodList,
+    DetailBottomBar,
+    BackTop,
   },
   mixins: [itemListenerMixin],
   data() {
@@ -60,6 +71,8 @@ export default {
       themeTopY: [],
       getThemeTopY: null,
       itemImgListener: null,
+      isShowBackTop: false,
+      currentIndex: 0,
     }
   },
   created() {
@@ -112,6 +125,37 @@ export default {
     titleclick(index) {
       this.$refs.scroll.scrollTo(0, -this.themeTopY[index], 100)
     },
+    backTop() {
+      this.$refs.scroll.scrollTo(0, 0, 600)
+    },
+    addToCart() {
+      const product = {}
+      ;(product.image = this.topImages[0]),
+        (product.title = this.goods.title),
+        (product.desc = this.goods.desc),
+        (product.price = this.goods.realPrice)
+      product.iid = this.iid
+      product.checked = true
+      //将商品添加到购物车
+      this.$store.dispatch('addCart', product)
+    },
+    contentScroll(position) {
+      const positionY = -position.y
+      let length = this.themeTopY.length
+      for (let i = 0; i < length; i++) {
+        if (
+          this.currentIndex !== i &&
+          ((i < length - 1 &&
+            positionY >= this.themeTopY[i] &&
+            positionY < this.themeTopY[i + 1]) ||
+            (i === length - 1 && positionY >= this.themeTopY[i]))
+        ) {
+          this.currentIndex = i
+          this.$refs.nav.currentIndex = this.currentIndex
+        }
+      }
+      this.isShowBackTop = positionY > 1000
+    },
   },
 }
 </script>
@@ -125,7 +169,7 @@ export default {
 }
 
 .content {
-  height: calc(100% - 44px);
+  height: calc(100% - 93px);
   overflow: hidden;
 }
 </style>

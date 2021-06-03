@@ -1,5 +1,5 @@
 <template>
-  <div ref="wrapper">
+  <div class="wrapper" ref="wrapper">
     <div class="content">
       <slot></slot>
     </div>
@@ -24,28 +24,43 @@ export default {
   data() {
     return {
       scroll: null,
+      message: '哈哈哈',
     }
   },
   methods: {
-    scrollTo(x, y, time = 400) {
+    scrollTo(x, y, time = 300) {
       this.scroll && this.scroll.scrollTo(x, y, time)
+    },
+    finishPullUp() {
+      this.scroll.finishPullUp()
     },
     refresh() {
       this.scroll && this.scroll.refresh()
     },
+    getScrollY() {
+      return this.scroll ? this.scroll.y : 0
+    },
   },
   mounted() {
+    //1.创建BScroll对象
     this.scroll = new BScroll(this.$refs.wrapper, {
       observeDOM: true,
+      observeImage: true,
+      //控制类似于div这种元素是否可以点击
       click: true,
       probeType: this.probeType,
       pullUpLoad: this.pullUpLoad,
     })
+
+    //2.监听滚动的位置
     if (this.probeType === 2 || this.probeType === 3) {
       this.scroll.on('scroll', (positon) => {
-        this.$emit('scrollTop', positon)
+        // console.log(positon);
+        this.$emit('scroll', positon)
       })
     }
+
+    //3.监听scroll滚动到底部
     if (this.pullUpLoad) {
       this.scroll.on('pullingUp', () => {
         this.$emit('pullingUp')
@@ -54,3 +69,5 @@ export default {
   },
 }
 </script>
+
+<style scoped></style>
