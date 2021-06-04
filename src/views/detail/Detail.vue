@@ -41,6 +41,7 @@ import { itemListenerMixin } from 'common/mixin.js'
 import { debounce } from 'common/utils'
 import DetailBottomBar from './chilsComps/DetailBottomBar.vue'
 import BackTop from '../../components/content/backTop/BackTop.vue'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'Detail',
@@ -118,6 +119,7 @@ export default {
   },
 
   methods: {
+    ...mapActions(['addCart']),
     imageLoad() {
       this.$refs.scroll.refresh()
       this.getThemeTopY()
@@ -137,7 +139,9 @@ export default {
       product.iid = this.iid
       product.checked = true
       //将商品添加到购物车
-      this.$store.dispatch('addCart', product)
+      this.addCart(product).then((res) => {
+        this.$toast.show(res, 2000)
+      })
     },
     contentScroll(position) {
       const positionY = -position.y
